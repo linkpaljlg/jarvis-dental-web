@@ -1,0 +1,599 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Jarvis Dental · Control de estaciones</title>
+<style>
+:root{--bg:#f5f5f7;--paper:#fff;--ink:#1d1d1f;--muted:#6e6e73;--blue:#0071e3;--green:#198754;--yellow:#a76600;--red:#b4232e;--line:#e5e5ea}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif}
+.shell{width:100%;margin:0;padding:16px 18px 34px}
+.pixel-icon{width:24px;height:24px;flex:none;image-rendering:pixelated;vertical-align:middle}
+.pixel-icon.md{width:30px;height:30px}
+.pixel-icon.sm{width:18px;height:18px}
+a{color:var(--blue)}
+
+/* Header: brand + fixed scanner on one row at every width, context row below */
+.page-header{padding:10px 2px 12px}
+.nav{display:flex;gap:6px;justify-content:flex-end;margin-bottom:8px}
+.nav a{font:800 12.5px system-ui;color:#0066cc;text-decoration:none;padding:5px 10px;border-radius:999px}
+.nav a.active{background:var(--ink);color:#fff}
+
+.header-top{display:flex;align-items:center;gap:10px;flex-wrap:nowrap;width:100%}
+.brand{display:flex;align-items:center;gap:7px;font-size:17px;font-weight:900;letter-spacing:.01em;flex:none;white-space:nowrap}
+.scan-compact{display:flex;align-items:center;gap:6px;flex:1 1 auto;min-width:0;background:#f6faff;border:1px solid #cfe0ff;border-radius:12px;padding:6px 8px}
+.scan-compact label{display:flex;align-items:center;flex:none}
+.scan-compact input{flex:1 1 auto;min-width:0;border:1px solid #c7c7cc;border-radius:8px;padding:7px 9px;font:13.5px system-ui}
+.scan-compact input:focus{outline:2px solid var(--blue);border-color:var(--blue)}
+.scan-compact button{border:0;border-radius:8px;padding:7px 12px;background:var(--blue);color:#fff;font:800 12px system-ui;cursor:pointer;white-space:nowrap;flex:none;min-height:34px}
+
+.control-label{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:850;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);white-space:nowrap;flex:none}
+
+/* Station selector: ONE physical row always — shrinks, then swipe-scrolls, never wraps */
+.station-strip{display:flex;flex-wrap:nowrap;gap:7px;overflow-x:auto;overflow-y:hidden;padding:10px 2px 10px;margin-top:6px;
+  scrollbar-width:none;-ms-overflow-style:none;-webkit-overflow-scrolling:touch}
+.station-strip::-webkit-scrollbar{display:none;height:0}
+.station-btn{flex:1 1 96px;min-width:80px;display:flex;flex-direction:column;align-items:center;gap:4px;border:1px solid var(--line);background:var(--paper);border-radius:12px;padding:8px 6px;font:800 11px system-ui;color:var(--ink);cursor:pointer;position:relative}
+.station-btn b{font-size:10.5px;line-height:1.1;text-align:center;text-transform:uppercase;letter-spacing:.02em;white-space:nowrap}
+.station-btn.active{background:var(--blue);border-color:var(--blue);color:#fff}
+.station-btn .dot{position:absolute;top:5px;right:7px;width:7px;height:7px;border-radius:50%;background:var(--yellow)}
+
+/* Toolbar: view buttons + compact status cells + urgent message, replaces the old overview */
+.toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:7px;padding:2px 2px 14px}
+.toolbar-buttons{display:flex;gap:6px;flex:none}
+.toolbar-buttons button{border:1px solid var(--line);background:var(--paper);border-radius:10px;padding:8px 12px;font:800 11.5px system-ui;color:var(--ink);cursor:pointer;white-space:nowrap;min-height:34px}
+.toolbar-buttons button.active{background:var(--ink);border-color:var(--ink);color:#fff}
+.toolbar-stats{display:flex;flex-wrap:wrap;align-items:stretch;gap:7px;flex:1 1 auto;min-width:0}
+.stat-cell{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:5px 10px;flex:none;white-space:nowrap;display:flex;flex-direction:column;justify-content:center}
+.stat-cell span{display:block;font-size:9px;font-weight:850;color:var(--muted);text-transform:uppercase;letter-spacing:.03em}
+.stat-cell b{font-size:12.5px;font-weight:800;letter-spacing:-.01em}
+.stat-cell.urgent-cell{position:relative;flex:1 1 220px;white-space:normal;background:#fff8e6;border-color:#f0d998}
+.stat-cell.urgent-cell b{color:var(--yellow);font-weight:750;font-size:11.5px;line-height:1.3}
+.alert-chips{display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.alert-chip{border:1px solid #e4c45b;background:#fff3b8;color:#755600;border-radius:999px;padding:3px 7px;font:800 9.5px system-ui;cursor:pointer;white-space:nowrap}
+.alert-chip.urgent{background:#ffd9dc;border-color:#e79aa2;color:#8b1d2a}
+.alert-popover{position:absolute;z-index:20;right:0;top:calc(100% + 6px);width:min(340px,calc(100vw - 28px));background:#fff;border:1px solid var(--line);box-shadow:0 12px 30px #1d1d1f2e;border-radius:12px;padding:11px 12px;color:var(--ink)}
+.alert-popover strong{display:block;font-size:12px;margin-bottom:4px}.alert-popover p{margin:0;font-size:12px;line-height:1.35}.alert-popover button{position:absolute;right:7px;top:6px;border:0;background:transparent;font-size:17px;cursor:pointer;color:var(--muted)}
+
+/* Split columns: en cola / en la estación — side by side at every width */
+.split{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.column{background:var(--paper);border:1px solid var(--line);border-radius:16px;box-shadow:0 6px 18px #1d1d1f0a;padding:12px 12px}
+.column h2{display:flex;align-items:center;gap:7px;font-size:15.5px;margin:0 0 2px}
+.column .note{color:var(--muted);font-size:11.5px;margin:0 0 9px}
+.cards{display:flex;flex-direction:column;gap:7px}
+.empty{border:1px dashed var(--line);border-radius:12px;padding:12px;color:var(--muted);font-size:12.5px;text-align:center}
+
+/* All-view: grouped by ordered station */
+.all-group{margin-bottom:18px}
+.all-group h3{display:flex;align-items:center;gap:8px;font-size:16.5px;margin:0 0 3px}
+.all-group .subhead{color:var(--muted);font-size:12px;margin:0 0 8px}
+
+/* Work item card: whole-rectangle color for urgent / attention states */
+.work{background:var(--paper);border:1px solid var(--line);border-left:5px solid var(--blue);border-radius:14px;overflow:hidden}
+.work.ready{border-left-color:var(--green);background:#f6fbf8}
+.work.attention-card{background:#fff3b8;border-color:#e8cf6e;border-left-color:#c98a00}
+.work.urgent-card{background:#ffd3d7;border-color:#e0949c;border-left-color:var(--red)}
+.work .head{display:flex;gap:9px;align-items:flex-start;padding:9px 10px 7px;cursor:pointer}
+.work .head .type-col{flex:none;width:108px;display:flex;flex-direction:column;align-items:center;gap:4px}
+.work .head .titles{flex:1;min-width:0}
+.work .head .k{display:block;color:var(--muted);font-size:10.5px;font-weight:800;letter-spacing:.02em}
+.work .head .k .synth-flag{color:var(--blue);font-weight:900}
+.work .head .name-row{display:flex;align-items:flex-start;justify-content:space-between;gap:4px 8px;margin-top:1px}
+.work .head .patient-line{display:flex;align-items:baseline;gap:5px;min-width:0;flex:1}
+.work .head .v{font-size:14.5px;font-weight:850;letter-spacing:-.02em;white-space:nowrap}
+.clinic-short{font-size:14.5px;font-weight:850;letter-spacing:-.02em;color:var(--blue);white-space:nowrap}
+.dispatch-area{flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.work .head .dispatch-chip{display:inline-flex;align-items:center;gap:3px;font-size:10.5px;font-weight:800;color:var(--muted);white-space:nowrap}
+.work .head .m{display:block;color:var(--muted);font-size:11px;margin-top:2px}
+.work .head .note-line{display:block;color:#3a3a3c;font-size:11px;font-style:italic;margin-top:3px;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.work .head .chev{color:var(--muted);font-size:12px;font-weight:800;align-self:center;flex:none}
+.pass-btn{border:0;border-radius:9px;background:var(--blue);color:#fff;font:800 9.5px system-ui;padding:6px 4px;min-height:36px;width:100%;line-height:1.15;cursor:pointer;text-transform:uppercase;letter-spacing:.01em}
+.queue-estimate{width:100%;margin-top:3px;font:800 8.5px/1 system-ui;color:var(--muted);text-align:right;display:flex;align-items:center;gap:4px;white-space:nowrap}
+.queue-progress{position:relative;flex:1;min-width:46px;height:14px;border-radius:99px;background:#dfe2e7;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.queue-progress i{position:absolute;inset:0 auto 0 0;display:block;height:100%;border-radius:99px;background:var(--blue)}
+.queue-progress b{position:relative;z-index:1;color:#17202a;font-size:8px;text-shadow:0 1px 1px #ffffff99}
+.queue-estimate span{display:inline;white-space:nowrap}
+.queue-estimate.queue-estimate-station{display:block;text-align:center}
+.queue-estimate.queue-estimate-station .queue-progress{margin-bottom:3px}
+.queue-estimate.queue-estimate-station span{display:block}
+.work .badges{display:flex;gap:5px;flex-wrap:wrap;padding:0 10px 8px 10px}
+.badge{display:inline-flex;align-items:center;gap:4px;border-radius:999px;padding:3px 9px;font-size:10.5px;font-weight:850;background:#fff;border:1px solid rgba(0,0,0,.08)}
+.badge.attention{color:#7a5b1e}
+.badge.blocked{color:#8d1f2a}
+.badge.ready{color:#137a3f}
+.badge.urgent{color:#8d1f2a}
+.detail{display:none;border-top:1px solid var(--line);padding:14px;background:#fbfbfc}
+.detail.open{display:block}
+.facts{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.fact{background:#fff;border:1px solid var(--line);border-radius:11px;padding:9px 11px}
+.fact span{display:block;color:var(--muted);font-size:11px;font-weight:800;text-transform:uppercase}
+.fact b{font-size:14.5px;font-weight:750}
+.note-block{margin-top:12px;font-size:14px}
+.note-block b{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;display:block;margin-bottom:3px}
+.route-mini{display:flex;gap:4px;flex-wrap:wrap;margin-top:12px}
+.route-mini span{border-radius:999px;padding:3px 9px;font:800 11px system-ui;background:#eceef1;color:#8a8a8e}
+.route-mini span.done{background:#d9d9dd;color:#5b5b5f}
+.route-mini span.active{background:var(--blue);color:#fff}
+.route-mini span.alert{background:#fff1bd;color:#7a5b1e}
+
+/* Demo note + actions */
+.demo-note{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}
+.demo-note b{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;display:block;margin-bottom:6px}
+.demo-note textarea{width:100%;min-height:56px;border:1px solid var(--line);border-radius:11px;padding:9px 11px;font:14px system-ui;resize:vertical}
+.demo-note .save{margin-top:7px;border:0;border-radius:10px;padding:9px 13px;background:#eef1f5;color:var(--ink);font:800 13px system-ui;cursor:pointer}
+.notes-log{margin-top:8px;display:flex;flex-direction:column;gap:5px}
+.notes-log .entry{font-size:13px;background:#fff;border:1px solid var(--line);border-radius:9px;padding:7px 10px}
+.notes-log .entry small{color:var(--muted);display:block;font-size:11px}
+
+.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}
+.actions button{border:0;border-radius:11px;padding:11px 15px;font:800 13.5px system-ui;cursor:pointer;min-height:44px}
+.btn-blocked{background:#fff;border:1px solid var(--line) !important;color:#8d1f2a}
+.status-line{margin-top:10px;font-size:13.5px;font-weight:750;padding:9px 11px;border-radius:10px}
+.status-line.confirm{background:#d9f2e3;color:#137a3f}
+.status-line.blocked{background:#ffe1e3;color:#8d1f2a}
+.block-form{margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;background:#fff;border:1px solid var(--line);border-radius:11px;padding:10px}
+.block-form select{flex:1 1 160px;min-width:0;border:1px solid var(--line);border-radius:9px;padding:8px 9px;font:14px system-ui}
+.block-form button{border:0;border-radius:9px;padding:9px 12px;font:800 13px system-ui;cursor:pointer}
+.block-form .confirm-block{background:var(--red);color:#fff}
+.block-form .cancel-block{background:#eef1f5;color:var(--ink)}
+
+.footer{margin-top:26px;color:var(--muted);font-size:14px;text-align:center}
+.footer a{font-weight:800;text-decoration:none}
+
+@media(max-width:900px){
+  .facts{grid-template-columns:1fr 1fr}
+}
+@media(max-width:640px){
+  .shell{padding:12px 10px 26px}
+  .brand{font-size:14.5px}
+  .control-label{font-size:9.5px}
+  .scan-compact button{padding:7px 9px}
+  .split{gap:8px}
+  .column{padding:9px 8px}
+  .work .head .type-col{width:78px}
+  .facts{grid-template-columns:1fr}
+}
+
+</style>
+</head>
+<body>
+<main class="shell">
+  <header class="page-header">
+    <div class="header-top">
+      <div class="brand"><svg class="pixel-icon"><use href="assets/pixel-icons.svg#icon-bull"/></svg><span>JARVIS DENTAL</span></div>
+      <span class="control-label"><svg class="pixel-icon sm"><use href="assets/pixel-icons.svg#icon-station-map"/></svg>Control de estaciones</span>
+      <div class="scan-compact">
+        <label for="scanInput"><svg class="pixel-icon sm"><use href="assets/pixel-icons.svg#icon-vevi"/></svg></label>
+        <input id="scanInput" autocomplete="off" inputmode="text" placeholder="Escanear trabajo · JAR-SYN-401" aria-label="Escanear trabajo: referencia">
+        <button class="scan-btn" id="scanBtn">Escanear</button>
+      </div>
+    </div>
+  </header>
+
+  <nav class="station-strip" id="stationStrip" aria-label="Estaciones del laboratorio, en orden"></nav>
+
+  <section class="toolbar" aria-label="Controles y resumen del puesto">
+    <div class="toolbar-buttons" role="tablist" aria-label="Vista de trabajos">
+      <button data-view="station" class="active" role="tab" aria-selected="true">ESTACIONES</button>
+      <button data-view="all" role="tab" aria-selected="false">LISTA TRABAJOS</button>
+    </div>
+    <div class="toolbar-stats" id="toolbarStats"></div>
+  </section>
+
+  <section class="split" id="splitView">
+    <section class="column">
+      <h2><svg class="pixel-icon sm"><use href="assets/pixel-icons.svg#icon-alert"/></svg>En cola</h2>
+      <p class="note" id="queueNote"></p>
+      <div class="cards" id="queueList"></div>
+    </section>
+    <section class="column">
+      <h2><svg class="pixel-icon sm"><use href="assets/pixel-icons.svg#icon-station-map"/></svg>En estación</h2>
+      <p class="note" id="presentNote"></p>
+      <div class="cards" id="presentList"></div>
+    </section>
+  </section>
+
+  <section id="allView" hidden></section>
+
+  <footer class="footer"><nav aria-label="Menú de Jarvis"><a href="index.html">TORRE</a> · <a href="kiosk.html">KIOSCO</a> · <a href="work-order.html">FICHA</a> · <a href="admin.html">GESTIÓN</a></nav></footer>
+</main>
+
+<script>
+const STATIONS=[
+  {id:'recepcion',label:'Recepción',short:'RECEPCIÓN',icon:'icon-reception',desc:'Entrada y validación de datos del trabajo.'},
+  {id:'batea',label:'Batea',short:'BATEA',icon:'icon-station-map',desc:'Clasificación por bandeja y prioridad.'},
+  {id:'diseno',label:'Diseño',short:'DISEÑO',icon:'icon-design',desc:'Diseño CAD del caso.'},
+  {id:'revision',label:'Revisión',short:'REVISIÓN',icon:'icon-review',desc:'Revisión previa a fabricación.'},
+  {id:'impresion',label:'Impresión 3D',short:'IMPRESIÓN',icon:'icon-printer',desc:'Impresión de modelos de preparación para fresado.'},
+  {id:'fresado',label:'Fresado',short:'FRESADO',icon:'icon-milling',desc:'Fresado / mecanizado de la pieza.'},
+  {id:'horno',label:'Horno / Sinterizado',short:'HORNO',icon:'icon-zirconia',desc:'Ciclo de sinterizado del zirconio.'},
+  {id:'myg',label:'M & G',short:'M&G',icon:'icon-vevi',desc:'Montaje y grabado sobre modelo maestro.'},
+  {id:'acabado',label:'Acabado',short:'ACABADO',icon:'icon-finish',desc:'Ajuste y pulido manual.'},
+  {id:'controlfinal',label:'Control final',short:'CONTROL',icon:'icon-review',desc:'Control final de ajuste y color.'},
+  {id:'embalaje',label:'Embalaje',short:'EMBALAJE',icon:'icon-purchase',desc:'Embalaje y preparación de envío.'},
+  {id:'envio',label:'Envío',short:'ENVÍO',icon:'icon-dispatch',desc:'Envío o recogida de mensajería.'}
+];
+const TYPE_ICON={'corona unitaria':'icon-crown','puente 3 piezas':'icon-bridge','férula':'icon-splint','arcada':'icon-arch','carga inmediata':'icon-pmma'};
+
+// Avisos operativos sintéticos del puesto: visibles como claves compactas y ampliables al tocar.
+const STATION_ALERTS={
+  recepcion:[
+    {id:'arcada',kind:'cuidado',short:'ARCADA',message:'Cuidado: comprobar que la arcada opuesta está adjunta antes de clasificar el trabajo.'},
+    {id:'datos',kind:'cuidado',short:'DATOS',message:'Cuidado: revisar instrucciones y hora comprometida antes de liberar la entrada.'}
+  ],
+  batea:[{id:'prioridad',kind:'urgente',short:'PRIORIDAD',message:'Urgente: los trabajos con salida hoy deben separarse en batea prioritaria.'}],
+  fresado:[
+    {id:'fresas',kind:'cuidado',short:'FRESAS',message:'Cuidado: hay que cambiar las fresas antes del siguiente bloque de zirconio.'},
+    {id:'nido',kind:'cuidado',short:'NIDO',message:'Cuidado: no cargar demasiado el nido; mantener margen de sujeción.'}
+  ],
+  horno:[{id:'ciclo',kind:'cuidado',short:'CICLO',message:'Cuidado: verificar el ciclo y la bandeja antes de iniciar sinterizado.'}],
+  controlfinal:[{id:'salida',kind:'urgente',short:'SALIDA',message:'Urgente: validar ajuste y color de los trabajos que salen hoy.'}],
+  embalaje:[{id:'etiqueta',kind:'cuidado',short:'ETIQUETA',message:'Cuidado: comprobar etiqueta, clínica y destino antes de cerrar el embalaje.'}],
+  envio:[{id:'corte',kind:'urgente',short:'CORTE',message:'Urgente: revisar los trabajos con margen ajustado antes de la recogida.'}]
+};
+
+const WORK_ITEMS=[
+  {id:'JAR-SYN-401',clinic:'C.D. Freitas',type:'corona unitaria',teeth:'Pieza 16',material:'Zirconio',shade:'A2',dispatch:'Hoy · 17:00',current:'recepcion',next:'batea',note:'Alta registrada; validando datos de entrega con la clínica.'},
+  {id:'JAR-SYN-402',clinic:'C.D. Nadal',type:'férula',teeth:'Arcada superior',material:'PMMA',shade:'Transparente',dispatch:'Mañana · 12:00',current:'recepcion',next:'batea',note:'Falta registrar la arcada opuesta antes de clasificar.',attention:true,blockerReason:'Falta arcada opuesta'},
+
+  {id:'JAR-SYN-395',clinic:'C.D. Riera',type:'puente 3 piezas',teeth:'Piezas 24-26',material:'Zirconio',shade:'A3',dispatch:'Hoy · 17:00',current:'batea',next:'diseno',note:'Clasificado en batea 3; prioridad estándar.'},
+  {id:'JAR-SYN-396',clinic:'C.D. Molina',type:'carga inmediata',teeth:'Piezas 11-21',material:'PMMA',shade:'A1',dispatch:'Hoy · 15:30',current:'batea',next:'diseno',note:'Carga inmediata PMMA: prioridad absoluta informativa; decisión humana pendiente.',urgent:true},
+
+  {id:'JAR-SYN-388',clinic:'C.D. Serrano',type:'corona unitaria',teeth:'Pieza 24',material:'Zirconio',shade:'B1',dispatch:'Hoy · 17:00',current:'diseno',next:'revision',note:'Diseño en curso; aproximadamente 60% completado.'},
+  {id:'JAR-SYN-389',clinic:'C.D. Freitas',type:'arcada',teeth:'Arcada inferior completa',material:'Zirconio',shade:'A2',dispatch:'Mañana · 17:00',current:'diseno',next:'revision',note:'Pendiente de escaneo intraoral adicional antes de continuar.',attention:true,blockerReason:'Escaneo incompleto'},
+
+  {id:'JAR-SYN-380',clinic:'C.D. Vela',type:'puente 3 piezas',teeth:'Piezas 34-36',material:'Zirconio',shade:'A3',dispatch:'Hoy · 17:00',current:'revision',next:'fresado',note:'Revisión visual del diseño antes de liberar a fresado.'},
+
+  {id:'JAR-SYN-370',clinic:'C.D. Molina',type:'corona unitaria',teeth:'Pieza 46',material:'Zirconio',shade:'A2',dispatch:'Hoy · 17:00',current:'fresado',next:'horno',note:'Fresado según archivo CAD validado.'},
+  {id:'JAR-SYN-371',clinic:'C.D. Nadal',type:'puente 3 piezas',teeth:'Piezas 44-46',material:'Zirconio',shade:'B2',dispatch:'Hoy · 17:00',current:'fresado',next:'horno',note:'En cola de fresadora 2; cambio de disco en curso.',attention:true,blockerReason:'Disco de zirconio en cambio'},
+
+  {id:'JAR-SYN-360',clinic:'C.D. Riera',type:'corona unitaria',teeth:'Pieza 15',material:'Zirconio',shade:'A1',dispatch:'Hoy · 17:00',current:'horno',next:'myg',note:'Ciclo de sinterizado en curso; 90 minutos restantes.'},
+
+  {id:'JAR-SYN-350',clinic:'C.D. Freitas',type:'puente 3 piezas',teeth:'Piezas 24-26',material:'Zirconio',shade:'A3',dispatch:'Hoy · 17:00',current:'myg',next:'acabado',note:'Montaje sobre modelo maestro y grabado de referencias.'},
+
+  {id:'JAR-SYN-340',clinic:'C.D. Serrano',type:'corona unitaria',teeth:'Pieza 36',material:'Zirconio',shade:'B1',dispatch:'Hoy · 17:00',current:'acabado',next:'controlfinal',note:'Ajuste y pulido manual en curso.'},
+  {id:'JAR-SYN-341',clinic:'C.D. Vela',type:'arcada',teeth:'Arcada superior completa',material:'Zirconio',shade:'A2',dispatch:'Hoy · 17:00',current:'acabado',next:'controlfinal',note:'Pulido de arcada completa; revisar oclusión antes de QC.'},
+
+  {id:'JAR-SYN-330',clinic:'C.D. Molina',type:'corona unitaria',teeth:'Pieza 16',material:'Zirconio',shade:'A2',dispatch:'Hoy · 17:00',current:'controlfinal',next:'embalaje',note:'Control final de ajuste y color antes de embalaje.'},
+
+  {id:'JAR-SYN-320',clinic:'C.D. Nadal',type:'puente 3 piezas',teeth:'Piezas 14-16',material:'Zirconio',shade:'A3',dispatch:'Hoy · 17:00',current:'embalaje',next:'envio',note:'Embalado con protección de transporte.',ready:true},
+  {id:'JAR-SYN-321',clinic:'C.D. Riera',type:'férula',teeth:'Arcada inferior',material:'PMMA',shade:'Transparente',dispatch:'Hoy · 17:00',current:'embalaje',next:'envio',note:'Verificando bolsa y ficha de envío.',ready:true},
+
+  {id:'JAR-SYN-310',clinic:'C.D. Freitas',type:'corona unitaria',teeth:'Pieza 24',material:'Zirconio',shade:'A2',dispatch:'Hoy · 17:00 · margen 45 min',current:'envio',next:null,note:'Recogida MRW programada en ventana de salida.',ready:true},
+  {id:'JAR-SYN-311',clinic:'C.D. Serrano',type:'puente 3 piezas',teeth:'Piezas 44-46',material:'Zirconio',shade:'B1',dispatch:'Hoy · 17:00 · margen 20 min',current:'envio',next:null,note:'Última verificación antes de la recogida.',ready:true,attention:true,blockerReason:'Margen ajustado antes de corte MRW'}
+];
+
+// Volumen deliberado para la demo: cada estación debe parecer un puesto real,
+// con más de 10 casos en cola y 7–12 casos presentes, sin datos de pacientes reales.
+const SYNTHETIC_CLINICS=['C.D. Freitas','C.D. Nadal','C.D. Riera','C.D. Molina','C.D. Serrano'];
+const SYNTHETIC_TYPES=[
+  {type:'corona unitaria',teeth:'Pieza 16',material:'Zirconio',shade:'A2'},
+  {type:'puente 3 piezas',teeth:'Piezas 24-26',material:'Zirconio',shade:'A3'},
+  {type:'férula',teeth:'Arcada superior',material:'PMMA',shade:'Transparente'},
+  {type:'arcada',teeth:'Arcada inferior completa',material:'Zirconio',shade:'B1'},
+  {type:'carga inmediata',teeth:'Piezas 11-21',material:'PMMA',shade:'A1'}
+];
+
+function addDemoWorkload(){
+  let sequence=800;
+  STATIONS.forEach((station,index)=>{
+    const targetPresent=11+(index%2); // 11 o 12 presentes por puesto.
+    const existingPresent=WORK_ITEMS.filter(item=>item.current===station.id).length;
+    const next=STATIONS[index+1]?.id||null;
+    for(let count=existingPresent;count<targetPresent;count++){
+      const spec=SYNTHETIC_TYPES[sequence%SYNTHETIC_TYPES.length];
+      const id=`JAR-SYN-${sequence++}`;
+      WORK_ITEMS.push({
+        id,
+        clinic:SYNTHETIC_CLINICS[sequence%SYNTHETIC_CLINICS.length],
+        ...spec,
+        dispatch:count%3===0?'Hoy · 17:00':count%3===1?'Mañana · 12:00':'Mañana · 17:00',
+        current:station.id, next,
+        note:`Caso de demostración presente en ${station.label}; ruta visible para revisión del flujo.`
+      });
+    }
+  });
+
+  // Entradas todavía sin ubicar: alimentan la cola de Recepción, no son un puesto.
+  for(let count=0;count<11;count++){
+    const spec=SYNTHETIC_TYPES[(sequence+count)%SYNTHETIC_TYPES.length];
+    const id=`JAR-SYN-${sequence++}`;
+    WORK_ITEMS.push({
+      id,
+      clinic:SYNTHETIC_CLINICS[count%SYNTHETIC_CLINICS.length],
+      ...spec,
+      dispatch:count<3?'Hoy · 17:00':'Mañana · 12:00',
+      current:'entrada', next:'recepcion',
+      note:'Entrada sintética pendiente de recepción y validación inicial.'
+    });
+  }
+
+  // Cola adicional por puesto para hacer visibles cargas distintas (11–15).
+  const queueTargets={diseno:13,fresado:15,horno:14,controlfinal:13,envio:15};
+  Object.entries(queueTargets).forEach(([stationId,target])=>{
+    const existing=WORK_ITEMS.filter(item=>item.next===stationId||item.queuedFor===stationId).length;
+    for(let count=existing;count<target;count++){
+      const spec=SYNTHETIC_TYPES[sequence%SYNTHETIC_TYPES.length];
+      const id=`JAR-SYN-${sequence++}`;
+      WORK_ITEMS.push({
+        id,
+        clinic:SYNTHETIC_CLINICS[sequence%SYNTHETIC_CLINICS.length],
+        ...spec,
+        dispatch:count%2===0?'Hoy · 17:00':'Mañana · 12:00',
+        current:'entrada', next:null, queuedFor:stationId,
+        note:`Entrada sintética preparada para ${STATIONS.find(station=>station.id===stationId)?.label||stationId}.`
+      });
+    }
+  });
+}
+addDemoWorkload();
+
+// Deterministic synthetic patient names — derived from the work id, never real patients.
+const SYNTHETIC_PATIENT_POOL=['Elena Rueda','Marcos Vidal','Sofía Lozano','Diego Paredes','Lucía Ferrer','Iván Marín','Carla Nieto','Pablo Serra','Nuria Campos','Álvaro Prats','Marta Solana','Rubén Cobos','Irene Salas','Tomás Bravo','Clara Iglesias','Hugo Peralta','Alba Reyes','Óscar Lucena','Beatriz Moral','Sergio Pardo','Noa Villar','Adrián Cortés','Laura Espín','Mario Bueno'];
+function syntheticPatient(id){
+  let h=0; for(let i=0;i<id.length;i++) h=(h*31+id.charCodeAt(i))>>>0;
+  return SYNTHETIC_PATIENT_POOL[h%SYNTHETIC_PATIENT_POOL.length];
+}
+
+// Estimaciones de proceso de la auditoría de Jean-Michel (17/08/2026).
+// Excluyen espera de cola, ventanas de aprobación y tiempos aún no cuantificados.
+const AUDIT_STAGE_MINUTES={
+  'corona unitaria':{recepcion:10,diseno:15,revision:5,fresado:30,horno:600,myg:20,acabado:40},
+  'puente 3 piezas':{recepcion:10,diseno:25,revision:5,fresado:165,horno:840,myg:60,acabado:40},
+  'arcada':{recepcion:10,diseno:60,revision:5,fresado:210,horno:960,myg:140,acabado:40},
+  'férula':{recepcion:10,diseno:20,revision:5},
+  'carga inmediata':{recepcion:10,diseno:15,revision:5,fresado:30,acabado:20}
+};
+function auditRemaining(o,stationId){
+  const stages=AUDIT_STAGE_MINUTES[o.type];
+  if(!stages) return {percent:0,label:'TIEMPO POR VALIDAR'};
+  const from=Math.max(0,stationIndex(stationId));
+  const remaining=STATIONS.slice(from).reduce((sum,station)=>sum+(stages[station.id]||0),0);
+  const total=Object.values(stages).reduce((sum,value)=>sum+value,0);
+  const percent=total?Math.round(((total-remaining)/total)*100):0;
+  const hours=Math.floor(remaining/60), minutes=remaining%60;
+  const label=hours?`${hours}H ${String(minutes).padStart(2,'0')}M`: `${minutes}M`;
+  return {percent,label};
+}
+
+const BLOCK_REASONS=['Falta información de diseño','Pieza dañada en tránsito','Esperando pieza de horno','Duda de color o forma','Sin operario disponible'];
+
+let activeStation='recepcion', activeView='station', openId=null, showBlockFormFor=null, openStationAlertId=null;
+const uiState={}; // per work-id: {blocked,blockReason,movedAt,notes:[]}
+WORK_ITEMS.forEach(o=>uiState[o.id]={blocked:false,blockReason:'',movedAt:null,notes:[]});
+
+const $=s=>document.querySelector(s);
+const stationMeta=id=>STATIONS.find(s=>s.id===id);
+const stationIndex=id=>STATIONS.findIndex(s=>s.id===id);
+const printerIcon=cls=>`<svg class="pixel-icon ${cls||''}" viewBox="0 0 32 32" aria-label="Impresora 3D"><path fill="#6c757d" d="M5 11h22v14H5z"/><path fill="#adb5bd" d="M8 4h16v9H8z"/><path fill="#fff" d="M9 18h14v10H9z"/><path fill="#00b4d8" d="M10 14h5v3h-5z"/><path fill="#38b000" d="M20 14h3v3h-3z"/></svg>`;
+const icon=(name,cls)=>name==='icon-printer'?printerIcon(cls):`<svg class="pixel-icon ${cls||''}"><use href="assets/pixel-icons.svg#${name}"/></svg>`;
+const time=()=>new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
+
+function stationWorkload(id){
+  const present=WORK_ITEMS.filter(o=>o.current===id);
+  const queue=WORK_ITEMS.filter(o=>o.next===id||o.queuedFor===id);
+  const blocked=present.concat(queue).some(o=>o.attention||o.urgent||uiState[o.id].blocked);
+  return {present,queue,blocked};
+}
+
+function renderStationStrip(){
+  $('#stationStrip').innerHTML=STATIONS.map(st=>{
+    const w=stationWorkload(st.id);
+    const active=activeStation===st.id&&activeView==='station';
+    return `<button class="station-btn ${active?'active':''}" data-station="${st.id}">
+      ${w.blocked?'<span class="dot" title="Bloqueo o atención en el puesto"></span>':''}
+      ${icon(st.icon)}<b>${st.short}</b>
+    </button>`;
+  }).join('');
+  $('#stationStrip').querySelectorAll('[data-station]').forEach(b=>b.onclick=()=>{
+    activeStation=b.dataset.station; activeView='station'; openId=null; showBlockFormFor=null; render();
+  });
+}
+
+function routeMini(o){
+  const curIdx=stationIndex(o.current);
+  return `<div class="route-mini">${STATIONS.map((st,i)=>{
+    const cls=i<curIdx?'done':i===curIdx?(o.attention||uiState[o.id].blocked?'alert':'active'):i===stationIndex(o.next)?'alert':'';
+    return `<span class="${cls}">${st.label}</span>`;
+  }).join('')}</div>`;
+}
+
+function passToStation(id,stationId){
+  const o=WORK_ITEMS.find(w=>w.id===id);
+  if(!o||!stationId||stationIndex(stationId)<0) return;
+  const idx=stationIndex(stationId);
+  o.current=stationId;
+  o.next=STATIONS[idx+1]?STATIONS[idx+1].id:null;
+  delete o.queuedFor;
+  uiState[id].movedAt=time();
+  render();
+}
+
+function workCard(o,context,stationId){
+  const state=uiState[o.id];
+  const open=openId===o.id;
+  const isBlocked=state.blocked;
+  const cls=o.urgent?'urgent-card':(isBlocked||o.attention)?'attention-card':o.ready?'ready':'';
+  const patientName=syntheticPatient(o.id);
+  const numericCode=`843${o.id.replace(/\D/g,'').padStart(9,'0')}`;
+  const trayNumber=stationIndex(o.current)>=0?String(stationIndex(o.current)+1).padStart(2,'0'):'00';
+  const sideAlert=o.urgent?`<span class="badge urgent">Urgente</span>`
+    :isBlocked?`<span class="badge blocked">${state.blockReason}</span>`
+    :o.attention?`<span class="badge attention">${o.blockerReason}</span>`:'';
+  const badges=[];
+  if(o.ready) badges.push(`<span class="badge ready">Listo</span>`);
+  const st=stationMeta(o.current)||{label:'Entrada pendiente de recepción'};
+  const notesHtml=state.notes.length?`<div class="notes-log">${state.notes.map(n=>`<div class="entry"><small>Nota local · ${n.time}</small>${n.text}</div>`).join('')}</div>`:'';
+  const statusHtml=state.movedAt?`<div class="status-line confirm">Movido a esta estación (simulado) · ${state.movedAt}</div>`:'';
+  const blockedStatusHtml=isBlocked?`<div class="status-line blocked">Bloqueo registrado (simulado): ${state.blockReason} · ${state.blockedAt}</div>`:'';
+  const blockForm=showBlockFormFor===o.id?`<div class="block-form">
+      <select id="reason-${o.id}">${BLOCK_REASONS.map(r=>`<option>${r}</option>`).join('')}</select>
+      <button class="confirm-block" data-act="confirm-block" data-id="${o.id}">Registrar bloqueo (simulado)</button>
+      <button class="cancel-block" data-act="cancel-block" data-id="${o.id}">Cancelar</button>
+    </div>`:'';
+  const passBtn=context==='queue'?`<button class="pass-btn" data-act="pass-station" data-id="${o.id}" data-station="${stationId}">${stationMeta(stationId).short}</button>`:'';
+  const estimate=auditRemaining(o,context==='queue'?stationId:o.current);
+  const estimateClass=context==='queue'?'queue-estimate queue-estimate-queue':'queue-estimate queue-estimate-station';
+  const queueEstimate=`<div class="${estimateClass}" title="Estimación de proceso según auditoría JM; no incluye espera de cola ni ventanas de aprobación."><div class="queue-progress"><i style="width:${estimate.percent}%"></i><b>${estimate.percent}%</b></div><span>${estimate.label}</span></div>`;
+  return `<article class="work ${cls}">
+    <div class="head" data-action="toggle-work-detail" data-id="${o.id}">
+      <div class="type-col">
+        ${icon(TYPE_ICON[o.type]||'icon-crown','md')}
+        ${passBtn}
+        ${queueEstimate}
+      </div>
+      <div class="titles">
+        <span class="k"><span class="synth-flag">SINTÉTICO</span> · Batea ${trayNumber} · Código ${numericCode}</span>
+        <span class="name-row"><span class="patient-line"><span class="v">${patientName}</span><span class="clinic-short">${o.clinic}</span></span><span class="dispatch-area"><span class="dispatch-chip">${icon('icon-dispatch','sm')}${o.dispatch}</span>${sideAlert}</span></span>
+        <span class="m">${o.type} · ${o.material} · ${o.teeth}</span>
+        ${o.note?`<span class="note-line">${o.note}</span>`:''}
+      </div>
+      <span class="chev">${open?'▲':'▼'}</span>
+    </div>
+    ${badges.length?`<div class="badges">${badges.join('')}</div>`:''}
+    <div class="detail ${open?'open':''}">
+      <div class="facts">
+        <div class="fact"><span>Paciente (sintético)</span><b>${patientName}</b></div>
+        <div class="fact"><span>Batea</span><b>${trayNumber}</b></div>
+        <div class="fact"><span>Código de barras</span><b>${numericCode}</b></div>
+        <div class="fact"><span>Clínica</span><b>${o.clinic}</b></div>
+        <div class="fact"><span>Tipo</span><b>${o.type}</b></div>
+        <div class="fact"><span>Piezas</span><b>${o.teeth}</b></div>
+        <div class="fact"><span>Material</span><b>${o.material}</b></div>
+        <div class="fact"><span>Color</span><b>${o.shade}</b></div>
+        <div class="fact"><span>Entrega / salida</span><b>${o.dispatch}</b></div>
+        <div class="fact"><span>Puesto actual</span><b>${st.label}</b></div>
+        <div class="fact"><span>Siguiente puesto</span><b>${o.next?stationMeta(o.next).label:'Sin siguiente · listo para expedición'}</b></div>
+      </div>
+      <div class="note-block"><b>Nota operativa</b>${o.note}</div>
+      ${routeMini(o)}
+      <div class="demo-note">
+        <b>Nota o mensaje local de demo</b>
+        <textarea id="note-${o.id}" placeholder="Escribe una nota de demo para este trabajo (solo local, no se envía a ningún sistema)."></textarea>
+        <button class="save" data-act="save-note" data-id="${o.id}">Guardar nota (local)</button>
+        ${notesHtml}
+      </div>
+      <div class="actions">
+        <button class="btn-blocked" data-act="cant-continue" data-id="${o.id}">${icon('icon-alert','sm')} No puedo continuar</button>
+      </div>
+      ${blockForm}
+      ${statusHtml}
+      ${blockedStatusHtml}
+    </div>
+  </article>`;
+}
+
+function bindCardEvents(root){
+  root.querySelectorAll('[data-action="toggle-work-detail"]').forEach(el=>el.onclick=()=>{
+    openId=openId===el.dataset.id?null:el.dataset.id; showBlockFormFor=null; render();
+  });
+  root.querySelectorAll('[data-act="pass-station"]').forEach(el=>el.onclick=(e)=>{
+    e.stopPropagation();
+    passToStation(el.dataset.id,el.dataset.station);
+  });
+  root.querySelectorAll('[data-act="cant-continue"]').forEach(el=>el.onclick=()=>{
+    showBlockFormFor=el.dataset.id; render();
+  });
+  root.querySelectorAll('[data-act="cancel-block"]').forEach(el=>el.onclick=()=>{
+    showBlockFormFor=null; render();
+  });
+  root.querySelectorAll('[data-act="confirm-block"]').forEach(el=>el.onclick=()=>{
+    const id=el.dataset.id, reason=$(`#reason-${id}`).value;
+    uiState[id].blocked=true; uiState[id].blockReason=reason; uiState[id].blockedAt=time();
+    showBlockFormFor=null; render();
+  });
+  root.querySelectorAll('[data-act="save-note"]').forEach(el=>el.onclick=()=>{
+    const id=el.dataset.id, field=$(`#note-${id}`), text=field.value.trim();
+    if(!text) return;
+    uiState[id].notes.push({text,time:time()});
+    openId=id; render();
+  });
+}
+
+function renderToolbarStats(){
+  const st=stationMeta(activeStation), w=stationWorkload(activeStation);
+  const nextItem=w.queue[0];
+  const caseAlerts=w.present.concat(w.queue)
+    .filter(o=>o.attention||o.urgent||uiState[o.id].blocked)
+    .map(o=>({
+      id:`case-${o.id}`,
+      kind:o.urgent?'urgente':'cuidado',
+      short:o.urgent?'URGENTE':(uiState[o.id].blocked?'BLOQUEO':o.blockerReason.split(' ')[0].toUpperCase()),
+      message:`${o.id}: ${o.urgent?'Urgente: atención prioritaria para este trabajo.':(uiState[o.id].blocked?uiState[o.id].blockReason:o.blockerReason)}`
+    }));
+  const alerts=[...(STATION_ALERTS[activeStation]||[]),...caseAlerts].slice(0,4);
+  const activeAlert=alerts.find(alert=>alert.id===openStationAlertId);
+  const count=value=>String(value).padStart(2,'0');
+  const chips=alerts.length
+    ? `<div class="alert-chips">${alerts.map(alert=>`<button class="alert-chip ${alert.kind==='urgente'?'urgent':''}" data-alert="${alert.id}">${alert.short}</button>`).join('')}</div>`
+    : '<b>SIN AVISOS</b>';
+  const popover=activeAlert?`<div class="alert-popover"><button data-alert-close aria-label="Cerrar aviso">×</button><strong>${activeAlert.kind==='urgente'?'URGENTE':'CUIDADO'} · ${activeAlert.short}</strong><p>${activeAlert.message}</p></div>`:'';
+  $('#toolbarStats').innerHTML=`
+    <div class="stat-cell"><span>PUESTO</span><b>${st.short}: ${count(w.queue.length)} | ${count(w.present.length)}</b></div>
+    <div class="stat-cell"><span>SIGUIENTE</span><b>${nextItem?nextItem.id:'—'}</b></div>
+    <div class="stat-cell urgent-cell"><span>URGENTE / CUIDADO</span>${chips}${popover}</div>
+  `;
+  $('#toolbarStats').querySelectorAll('[data-alert]').forEach(button=>button.onclick=()=>{
+    openStationAlertId=openStationAlertId===button.dataset.alert?null:button.dataset.alert;
+    renderToolbarStats();
+  });
+  $('#toolbarStats').querySelector('[data-alert-close]')?.addEventListener('click',()=>{
+    openStationAlertId=null;
+    renderToolbarStats();
+  });
+}
+
+function renderStationSplit(){
+  const st=stationMeta(activeStation), w=stationWorkload(activeStation);
+  $('#queueNote').textContent=`Esperando entrar en ${st.label}.`;
+  $('#presentNote').textContent=`Presentes ahora en ${st.label}.`;
+  $('#queueList').innerHTML=w.queue.length?w.queue.map(o=>workCard(o,'queue',activeStation)).join(''):'<div class="empty">Sin trabajos en cola hacia este puesto.</div>';
+  $('#presentList').innerHTML=w.present.length?w.present.map(o=>workCard(o,'present',activeStation)).join(''):'<div class="empty">Ningún trabajo está ahora en este puesto.</div>';
+  bindCardEvents($('#splitView'));
+}
+
+function renderAllView(){
+  const ordered=[...WORK_ITEMS].sort((a,b)=>{
+    const aPosition=stationIndex(a.queuedFor||a.current||a.next);
+    const bPosition=stationIndex(b.queuedFor||b.current||b.next);
+    return aPosition-bPosition||a.id.localeCompare(b.id);
+  });
+  $('#allView').innerHTML=`<section class="all-group">
+    <h3>${icon('icon-station-map')} TODOS LOS TRABAJOS · ${ordered.length}</h3>
+    <p class="subhead">Lista única de todos los trabajos sintéticos que están en el flujo, incluidos cola y estación.</p>
+    <div class="cards">${ordered.map(work=>{const destination=work.queuedFor||(work.current==='entrada'?work.next:work.current); const context=(work.queuedFor||work.current==='entrada')?'queue':'present'; return workCard(work,context,destination);}).join('')}</div>
+  </section>`;
+  bindCardEvents($('#allView'));
+}
+
+function render(){
+  renderStationStrip();
+  renderToolbarStats();
+  const stationMode=activeView==='station';
+  $('#splitView').style.display=stationMode?'grid':'none';
+  $('#allView').hidden=stationMode;
+  if(stationMode){ renderStationSplit(); }
+  else{ renderAllView(); }
+}
+
+$('#scanBtn').onclick=()=>{
+  const q=$('#scanInput').value.trim().toUpperCase();
+  const found=WORK_ITEMS.find(o=>o.id===q);
+  if(!found) return;
+  const locatedStation=stationMeta(found.current)||stationMeta(found.next);
+  activeStation=locatedStation.id; activeView='station'; openId=found.id;
+  render();
+};
+$('#scanInput').addEventListener('keydown',e=>{ if(e.key==='Enter') $('#scanBtn').click(); });
+
+document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>{
+  activeView=b.dataset.view; openId=null; showBlockFormFor=null;
+  document.querySelectorAll('[data-view]').forEach(x=>{ x.classList.toggle('active',x===b); x.setAttribute('aria-selected',x===b); });
+  render();
+});
+
+render();
+</script>
+</body>
+</html>

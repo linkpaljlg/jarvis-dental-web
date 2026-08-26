@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Jarvis Dental · Torre de control · v10</title>
+<style>
+:root{--bg:#f5f5f7;--paper:#fff;--ink:#1d1d1f;--muted:#6e6e73;--blue:#0071e3;--green:#198754;--yellow:#a76600;--red:#b4232e;--line:#e5e5ea}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:18px/1.35 system-ui,-apple-system,"Segoe UI",sans-serif;min-width:1100px}
+.shell{max-width:1920px;margin:auto;padding:26px 30px}
+.icon{width:26px;height:26px;flex:none;vertical-align:middle;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.brandbar{display:flex;align-items:center;gap:16px;padding:6px 2px 6px;border-bottom:1px solid var(--line);padding-bottom:12px;margin-bottom:4px}
+.brand{display:flex;align-items:center;gap:12px;font-size:26px;font-weight:900;letter-spacing:.03em;color:var(--ink)}
+.brand .icon{width:30px;height:30px;color:var(--blue)}
+.brand .badge{background:#0b5c9c;color:#fff;border-radius:999px;padding:5px 13px;font-size:14px;font-weight:850}
+.nav{display:flex;gap:14px;margin-left:auto}
+.nav a{font:800 16px system-ui;color:#0066cc;text-decoration:none;padding:7px 13px;border-radius:999px}
+.nav a.active{background:#0b5c9c;color:#fff}
+.panel{background:var(--paper);border:1px solid var(--line);border-radius:22px;box-shadow:0 8px 24px #1d1d1f0c;padding:18px}
+.titleline{display:flex;align-items:center;justify-content:space-between;gap:9px}
+.titleline .icon{color:var(--blue)}
+.panel h2{font-size:22px;line-height:1.1;margin:0}
+.sub{color:var(--muted);margin:5px 0 0}
+.priority-grid{display:grid;grid-template-columns:1.4fr .8fr .8fr;gap:16px}
+.priority-list{display:grid;gap:8px;margin-top:13px}
+.priority-item{border-left:5px solid var(--blue);background:#f7f9fc;border-radius:11px;padding:10px 12px}
+.priority-item.urgent{border-color:var(--red);background:#fff5f6}
+.priority-item.incident{border-color:#d38a00;background:#fff8e6}
+.priority-item b{font-size:18px;display:block}
+.priority-item span{color:var(--muted);font-size:15px}
+.station-map{display:grid;grid-template-columns:repeat(5,1fr);gap:11px;margin-top:14px}
+.station{min-height:130px;border-radius:16px;padding:12px;border:1px solid var(--line);background:#fbfbfc}
+.station-head{display:flex;align-items:center;gap:8px}
+.station-head .icon{width:22px;height:22px;color:var(--blue)}
+.station h3{font-size:15px;margin:0}
+.station .queue{font-size:17px;font-weight:850;margin-top:8px}
+.station .next{color:var(--muted);font-size:13px;margin-top:6px}
+.station.alert{background:#fff6ee}
+.station.alert .station-head .icon{color:var(--red)}
+.alert-label{color:var(--red);font-size:13px;font-weight:800;margin-top:6px}
+.secondary-grid{display:grid;grid-template-columns:1fr 1fr 1.1fr;gap:16px;margin-top:16px}
+.forecast{border-left:4px solid var(--yellow);background:#fffdf5;border-radius:11px;padding:10px 12px;margin-bottom:8px}
+.forecast b{display:block;font-size:16px}
+.forecast p{color:var(--muted);font-size:14px;margin:3px 0 0}
+.purchase{border-left:4px solid var(--green);background:#f0faf4;border-radius:11px;padding:10px 12px;margin-bottom:8px}
+.purchase b{display:block;font-size:16px}
+.purchase p{color:var(--muted);font-size:13px;margin:3px 0 0;line-height:1.4}
+.calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-top:10px}
+.weekday{color:var(--muted);font-size:13px;font-weight:800;text-align:center}
+.day{aspect-ratio:1;border-radius:9px;display:flex;flex-direction:column;align-items:center;justify-content:center;border:1px solid var(--line);font-size:12px}
+.load-1{background:#eaf3ff}.load-2{background:#cfdfff}.load-3{background:#fbcf8f}.load-4{background:#f9a8a8}.load-5{background:#d97a3d;color:#fff}
+.legend{color:var(--muted);font-size:12px;margin-bottom:10px}
+.periods{display:flex;gap:8px;margin-top:12px}
+.periods button{border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:7px 14px;font:800 14px system-ui;color:var(--ink);cursor:pointer}
+.periods button.active{background:var(--blue);color:#fff}
+.period-row{display:grid;gap:8px;margin-top:12px}
+.period-row article{display:grid;grid-template-columns:1fr auto auto;gap:10px;background:#f7f9fc;border-radius:11px;padding:10px 12px}
+.period-row b{font-size:16px}
+.period-row span{color:var(--muted);font-size:14px}
+.footer{color:var(--muted);font-size:13px;margin-top:14px}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <symbol id="icon-bull" viewBox="0 0 24 24"><path d="M12 2 3 7v6c0 5 4 8 9 9 5-1 9-4 9-9V7z"/><path d="M9 12l2 2 4-4"/></symbol>
+    <symbol id="icon-reception" viewBox="0 0 24 24"><path d="M3 21V9l9-6 9 6v12"/><path d="M9 21v-6h6v6"/></symbol>
+    <symbol id="icon-classify" viewBox="0 0 24 24"><path d="M4 4h16v4H4z"/><path d="M4 12h10v4H4z"/><path d="M4 20h6v0H4z"/></symbol>
+    <symbol id="icon-design" viewBox="0 0 24 24"><path d="M12 20l8-14-3-3-14 8-1 6z"/><path d="M13 4l3 3"/></symbol>
+    <symbol id="icon-review" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></symbol>
+    <symbol id="icon-milling" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></symbol>
+    <symbol id="icon-oven" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/><circle cx="7" cy="6.5" r=".6" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="icon-finish" viewBox="0 0 24 24"><path d="M3 21l6-1 11-11-5-5L4 15z"/><path d="M14 6l4 4"/></symbol>
+    <symbol id="icon-control" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></symbol>
+    <symbol id="icon-bag" viewBox="0 0 24 24"><path d="M6 8h12l1 13H5z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></symbol>
+    <symbol id="icon-dispatch" viewBox="0 0 24 24"><path d="M3 7h11v9H3z"/><path d="M14 10h4l3 3v3h-7z"/><circle cx="7" cy="18" r="1.6"/><circle cx="18" cy="18" r="1.6"/></symbol>
+    <symbol id="icon-alert" viewBox="0 0 24 24"><path d="M12 3l10 18H2z"/><path d="M12 10v4M12 17v.5"/></symbol>
+    <symbol id="icon-incident" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M12 8v5M12 16v.5"/></symbol>
+    <symbol id="icon-urgent" viewBox="0 0 24 24"><path d="M13 2 3 14h6l-1 8 11-14h-6z"/></symbol>
+    <symbol id="icon-calendar" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18"/><path d="M8 3v4M16 3v4"/></symbol>
+    <symbol id="icon-purchase" viewBox="0 0 24 24"><path d="M6 6h15l-1.5 9h-12z"/><path d="M6 6l-1-3H2"/><circle cx="9.5" cy="19.5" r="1.4"/><circle cx="17.5" cy="19.5" r="1.4"/></symbol>
+    <symbol id="icon-stations" viewBox="0 0 24 24"><rect x="3" y="4" width="4" height="16"/><rect x="10" y="4" width="4" height="16"/><rect x="17" y="4" width="4" height="16"/></symbol>
+  </defs>
+</svg>
+
+<main class="shell">
+  <div class="brandbar">
+    <div class="brand"><svg class="icon"><use href="#icon-bull"/></svg>JARVIS DENTAL<span class="badge">v10</span></div>
+    <nav class="nav"><a href="index.html">Torre</a><a class="active" href="dashboard.html">Dashboard</a><a href="kiosk.html">Kiosco</a><a href="work-order.html">Ficha</a><a href="admin.html">Gestión</a></nav>
+  </div>
+
+  <div class="priority-grid" aria-label="Prioridades operativas">
+    <article class="panel due"><div class="titleline"><div><h2>Trabajos que salen hoy</h2><p class="sub">Entrega comprometida, hora y bloqueo visible.</p></div><svg class="icon"><use href="#icon-dispatch"/></svg></div><div id="outputs" class="priority-list"></div></article>
+    <article class="panel"><div class="titleline"><div><h2>Urgencias en cola</h2><p class="sub">Entradas y trabajos que requieren atención.</p></div><svg class="icon"><use href="#icon-urgent"/></svg></div><div id="urgents" class="priority-list"></div></article>
+    <article class="panel"><div class="titleline"><div><h2>Incidencias abiertas</h2><p class="sub">Propietario, puesto e impacto.</p></div><svg class="icon"><use href="#icon-incident"/></svg></div><div id="incidents" class="priority-list"></div></article>
+  </div>
+
+  <section class="panel" style="margin-top:16px"><div class="titleline"><div><h2>Puestos por posición</h2><p class="sub">Cola, siguiente trabajo e incidencia. Secuencia completa de recepción a envío.</p></div><svg class="icon"><use href="#icon-stations"/></svg></div><div class="station-map" id="stations"></div></section>
+
+  <section class="secondary-grid">
+    <article class="panel"><div class="titleline"><div><h2>Previsión de problemas</h2><p class="sub">Hitos y capacidad vigilados.</p></div><svg class="icon"><use href="#icon-alert"/></svg></div><div id="forecasts"></div></article>
+    <article class="panel"><div class="titleline"><div><h2>Previsión de compras</h2><p class="sub">Stock crítico y sugerencia local.</p></div><svg class="icon"><use href="#icon-purchase"/></svg></div><div id="purchases"></div></article>
+    <article class="panel calendar-panel"><div class="titleline"><div><h2>Calendario mensual</h2><p class="sub">Carga prevista.</p></div><svg class="icon"><use href="#icon-calendar"/></svg></div><div class="legend">Azul: baja · naranja: media · rojo: alta/máxima</div><div class="calendar" id="calendar"><span class="weekday">L</span><span class="weekday">M</span><span class="weekday">X</span><span class="weekday">J</span><span class="weekday">V</span><span class="weekday">S</span><span class="weekday">D</span></div></article>
+  </section>
+
+  <section class="panel" style="margin-top:16px"><div class="titleline"><div><h2>Trabajos previstos · semana y mes</h2><p class="sub">Carga y salidas comprometidas.</p></div><svg class="icon"><use href="#icon-calendar"/></svg></div><div class="periods"><button data-period="week">Semana</button><button data-period="month">Mes</button></div><div id="period-list" class="period-row"></div></section>
+
+  <p class="footer"><a href="index.html">Torre</a> · <a href="dashboard.html">Dashboard</a><br>Datos de apoyo simulados, local-first. Las decisiones operativas finales son humanas. Sin pacientes, importes ni integración con Vevi, CAM, impresoras o fresadoras.</p>
+</main>
+
+<script>
+const icon=name=>`<svg class="icon"><use href="#${name}"/></svg>`;
+const level=load=>load>=85?5:load>=70?4:load>=50?3:load>=30?2:1;
+const STATION_SEQUENCE=[
+ {"position":"Recepción","icon":"icon-reception"},
+ {"position":"Clasificación","icon":"icon-classify"},
+ {"position":"Diseño","icon":"icon-design"},
+ {"position":"Revisión","icon":"icon-review"},
+ {"position":"Fresado","icon":"icon-milling"},
+ {"position":"Horno","icon":"icon-oven"},
+ {"position":"Acabado","icon":"icon-finish"},
+ {"position":"Control final","icon":"icon-control"},
+ {"position":"Embolsado","icon":"icon-bag"},
+ {"position":"Envío","icon":"icon-dispatch"}
+];
+const data={
+"outputs_due_today":[
+ {"id":"JAR-SYN-208","reason":"Corona terminada; salida comprometida","station":"Envío","dispatch":"17:00 · margen 75 min"},
+ {"id":"JAR-SYN-206","reason":"Corona en control final","station":"Control final","dispatch":"17:00 · confirmar antes de embolsado"},
+ {"id":"JAR-SYN-204","reason":"Zirconio en ruta crítica","station":"Fresado","dispatch":"17:00 · requiere revisión"}
+],
+"urgent_queue":[
+ {"id":"JAR-SYN-211","reason":"Entrada urgente confirmada","station":"Recepción","next_action":"Clasificar y lanzar ruta"},
+ {"id":"JAR-SYN-204","reason":"Riesgo de perder salida de hoy","station":"Fresado","next_action":"Revisión humana antes de horno"}
+],
+"open_incidents":[
+ {"id":"INC-14","reason":"Cambio de diseño confirmado","owner":"Diseño","impact":"Retiene JAR-SYN-204","station":"Fresado"},
+ {"id":"INC-15","reason":"Información de entrada incompleta","owner":"Recepción","impact":"Revisión pendiente","station":"Clasificación"}
+],
+"stations":[
+ {"position":"Recepción","queue_count":3,"next_work":"JAR-SYN-211"},
+ {"position":"Clasificación","queue_count":1,"next_work":"JAR-SYN-212","incident":true},
+ {"position":"Diseño","queue_count":4,"next_work":"JAR-SYN-205"},
+ {"position":"Revisión","queue_count":2,"next_work":"JAR-SYN-206"},
+ {"position":"Fresado","queue_count":3,"next_work":"JAR-SYN-204","incident":true},
+ {"position":"Horno","queue_count":2,"next_work":"JAR-SYN-214"},
+ {"position":"Acabado","queue_count":1,"next_work":"JAR-SYN-209"},
+ {"position":"Control final","queue_count":1,"next_work":"JAR-SYN-206"},
+ {"position":"Embolsado","queue_count":2,"next_work":"JAR-SYN-207"},
+ {"position":"Envío","queue_count":3,"next_work":"JAR-SYN-208"}
+],
+"problem_forecast":[
+ {"level":"critical","title":"Horno D-2 17:00 en riesgo","station":"Horno","detail":"JAR-SYN-204 sigue en fresado."},
+ {"level":"warning","title":"Diseño prevé saturación","station":"Diseño","detail":"4 trabajos antes de las 13:30."},
+ {"level":"warning","title":"Embolsado D-1 vigilado","station":"Embolsado","detail":"JAR-SYN-206 espera confirmación."},
+ {"level":"info","title":"Salida D0 17:00","station":"Envío","detail":"3 trabajos con margen corto."}
+],
+"purchase_forecast":[
+ {"material":"Zirconio A2","stock":"18 discos","threshold":"mínimo 24","suggestion":"Pedido de 12 discos","eta":"22 ago"},
+ {"material":"PMMA","stock":"7 bloques","threshold":"mínimo 8","suggestion":"Pedido de 6 bloques","eta":"21 ago"},
+ {"material":"Bolsas envío","stock":"42 uds.","threshold":"mínimo 30","suggestion":"Nivel suficiente","eta":"—"}
+],
+"monthly_calendar":[ {"day":1,"load":18},{"day":2,"load":26},{"day":3,"load":42},{"day":4,"load":61},{"day":5,"load":86},{"day":6,"load":34},{"day":7,"load":12},{"day":8,"load":22},{"day":9,"load":38},{"day":10,"load":54},{"day":11,"load":73},{"day":12,"load":91},{"day":13,"load":45},{"day":14,"load":16},{"day":15,"load":25},{"day":16,"load":48},{"day":17,"load":78},{"day":18,"load":96},{"day":19,"load":67},{"day":20,"load":31},{"day":21,"load":14},{"day":22,"load":20},{"day":23,"load":44},{"day":24,"load":58},{"day":25,"load":82},{"day":26,"load":70},{"day":27,"load":39},{"day":28,"load":17},{"day":29,"load":29},{"day":30,"load":51}],
+"periods_week":[{"name":"Lun 17 ago","workload":7,"status":"flujo estable","dispatches":"2 salidas"},{"name":"Mar 18 ago","workload":10,"status":"1 hito vigilado","dispatches":"3 salidas"},{"name":"Mié 19 ago","workload":12,"status":"3 en riesgo","dispatches":"4 salidas"},{"name":"Jue 20 ago","workload":9,"status":"flujo estable","dispatches":"3 salidas"},{"name":"Vie 21 ago","workload":14,"status":"capacidad alta","dispatches":"5 salidas"}],
+"periods_month":[{"name":"Semana 1","workload":43,"status":"flujo estable","dispatches":"13 salidas"},{"name":"Semana 2","workload":51,"status":"1 cuello previsto","dispatches":"17 salidas"},{"name":"Semana 3","workload":61,"status":"capacidad alta","dispatches":"21 salidas"},{"name":"Semana 4","workload":48,"status":"flujo estable","dispatches":"16 salidas"}]
+};
+const render=(()=>{
+ document.querySelector('#outputs').innerHTML=data.outputs_due_today.map(w=>`<div class="priority-item"><b>${w.id} · ${w.reason}</b><span>${w.station} · ${w.dispatch}</span></div>`).join('');
+ document.querySelector('#urgents').innerHTML=data.urgent_queue.map(w=>`<div class="priority-item urgent"><b>${w.id} · ${w.reason}</b><span>${w.station} · ${w.next_action}</span></div>`).join('');
+ document.querySelector('#incidents').innerHTML=data.open_incidents.map(i=>`<div class="priority-item incident"><b>${i.id} · ${i.reason}</b><span>${i.owner} · ${i.station} · ${i.impact}</span></div>`).join('');
+ document.querySelector('#stations').innerHTML=STATION_SEQUENCE.map(seq=>{
+   const s=data.stations.find(x=>x.position===seq.position)||{queue_count:0,next_work:'—'};
+   return `<article class="station ${s.incident?'alert':''}"><div class="station-head">${icon(seq.icon)}<h3>${seq.position}</h3></div><div class="queue">${s.queue_count} <span style="font-size:13px">en cola</span></div><div>${s.next_work}</div>${s.incident?'<div class="alert-label">● Incidencia en puesto</div>':''}</article>`;
+ }).join('');
+ document.querySelector('#forecasts').innerHTML=data.problem_forecast.map(f=>`<div class="forecast"><b class="${f.level}">${f.title}</b><p>${f.station} · ${f.detail}</p></div>`).join('');
+ document.querySelector('#purchases').innerHTML=data.purchase_forecast.map(p=>`<div class="purchase"><b>${p.material}</b><p>${p.stock} · ${p.threshold}<br>${p.suggestion} · ${p.eta}</p></div>`).join('');
+ document.querySelector('#calendar').insertAdjacentHTML('beforeend',data.monthly_calendar.map(d=>`<div class="day load-${level(d.load)}"><span>${d.day}</span></div>`).join(''));
+ const period=name=>{document.querySelectorAll('.periods button').forEach(b=>b.classList.toggle('active',b.dataset.p===name));document.querySelector('#period-list').innerHTML=(name==='week'?data.periods_week:data.periods_month).map(w=>`<article><b>${w.name}</b><span>${w.workload} trabajos · ${w.status}</span><span>${w.dispatches}</span></article>`).join('')};
+ document.querySelectorAll('.periods button').forEach(b=>b.onclick=()=>period(b.dataset.p));
+ period('week');
+})();
+</script>
+</body>
+</html>

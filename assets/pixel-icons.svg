@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" shape-rendering="crispEdges">
+  <defs>
+    <symbol id="icon-crown" viewBox="0 0 32 32"><path fill="#ffd166" d="M4 9h4l4 5 4-9 4 9 4-5h4l-3 15H7z"/><path fill="#f4a261" d="M7 24h18v4H7z"/><path fill="#fff3b0" d="M8 12h3v5H8zm13 0h3v5h-3z"/></symbol>
+    <symbol id="icon-bridge" viewBox="0 0 32 32"><path fill="#e9c46a" d="M3 20h26v6H3z"/><path fill="#fff5cc" d="M5 13h6v7H5zm8-4h6v11h-6zm8 4h6v7h-6z"/><path fill="#b87932" d="M4 26h24v3H4z"/></symbol>
+    <symbol id="icon-splint" viewBox="0 0 32 32"><path fill="#77d9ff" d="M4 12h24v10H4z"/><path fill="#dff8ff" d="M7 9h18v4H7z"/><path fill="#2378a3" d="M8 22h3v4H8zm13 0h3v4h-3z"/></symbol>
+    <symbol id="icon-arch" viewBox="0 0 32 32"><path fill="#f7b7d2" d="M3 19h4v-6h4V9h4V7h4v2h4v4h4v6h2v7H3z"/><path fill="#fff" d="M7 16h3v5H7zm5-4h3v9h-3zm5-2h3v11h-3zm5 2h3v9h-3z"/></symbol>
+    <symbol id="icon-pmma" viewBox="0 0 32 32"><path fill="#ff8fab" d="M6 6h20v20H6z"/><path fill="#ffd3df" d="M10 9h12v7H10z"/><path fill="#fff" d="M10 18h12v5H10z"/></symbol>
+    <symbol id="icon-zirconia" viewBox="0 0 32 32"><path fill="#b5e2fa" d="M8 5h16l4 8-12 14L4 13z"/><path fill="#fff" d="M12 7h8v8h-8z"/><path fill="#4f86c6" d="M15 15h3v9h-3z"/></symbol>
+    <symbol id="icon-reception" viewBox="0 0 32 32"><path fill="#8ecae6" d="M4 11h24v17H4z"/><path fill="#219ebc" d="M4 18h24v4H4z"/><path fill="#fff" d="M11 5h10v9H11z"/></symbol>
+    <symbol id="icon-design" viewBox="0 0 32 32"><path fill="#cdb4db" d="M5 5h18v22H5z"/><path fill="#fff" d="M8 8h12v12H8z"/><path fill="#ffafcc" d="M21 19l7 7-3 3-7-7z"/></symbol>
+    <symbol id="icon-review" viewBox="0 0 32 32"><path fill="#90dbf4" d="M5 4h17v24H5z"/><path fill="#fff" d="M8 8h11v3H8zm0 6h11v3H8zm0 6h6v3H8z"/><path fill="#38b000" d="M20 20l3 3 6-7 2 2-8 9-5-5z"/></symbol>
+    <symbol id="icon-printer" viewBox="0 0 32 32"><path fill="#6c757d" d="M5 11h22v14H5z"/><path fill="#adb5bd" d="M8 4h16v9H8z"/><path fill="#fff" d="M9 18h14v10H9z"/><path fill="#00b4d8" d="M10 14h5v3h-5z"/><path fill="#38b000" d="M20 14h3v3h-3z"/></symbol>
+    <symbol id="icon-milling" viewBox="0 0 32 32"><path fill="#adb5bd" d="M5 4h22v10H5z"/><path fill="#6c757d" d="M12 14h8v11h-8z"/><path fill="#00b4d8" d="M14 24h4v5h-4z"/><path fill="#ffd166" d="M7 7h5v4H7z"/></symbol>
+    <symbol id="icon-finish" viewBox="0 0 32 32"><path fill="#f4a261" d="M6 24l12-20 5 5-12 20z"/><path fill="#fff3b0" d="M9 21l8-13 2 2-8 13z"/><path fill="#6c757d" d="M4 25h13v4H4z"/></symbol>
+    <symbol id="icon-dispatch" viewBox="0 0 32 32"><path fill="#52b788" d="M3 10h17v14H3z"/><path fill="#40916c" d="M20 14h6l3 4v6H20z"/><path fill="#fff" d="M6 13h10v3H6z"/><path fill="#1b4332" d="M7 24a3 3 0 1 0 0 6 3 3 0 0 0 0-6zm16 0a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></symbol>
+    <symbol id="icon-vevi" viewBox="0 0 32 32"><path fill="#bdb2ff" d="M4 5h24v22H4z"/><path fill="#fff" d="M8 9h16v3H8zm0 6h16v3H8zm0 6h10v3H8z"/></symbol>
+    <symbol id="icon-alert" viewBox="0 0 32 32"><path fill="#ffd166" d="M16 3 30 28H2z"/><path fill="#7f5539" d="M14 11h4v9h-4zm0 12h4v3h-4z"/></symbol>
+    <symbol id="icon-incident" viewBox="0 0 32 32"><path fill="#ff7b7b" d="M4 5h24v20H4z"/><path fill="#fff" d="M14 9h4v8h-4zm0 11h4v4h-4z"/></symbol>
+    <symbol id="icon-urgent" viewBox="0 0 32 32"><path fill="#ff595e" d="M5 5h22v22H5z"/><path fill="#fff" d="M14 8h4v11h-4zm0 14h4v4h-4z"/></symbol>
+    <symbol id="icon-bomb" viewBox="0 0 32 32"><path fill="#343a40" d="M5 14h22v14H5z"/><path fill="#6c757d" d="M9 10h14v5H9z"/><path fill="#f4a261" d="M18 5h4v6h-4z"/><path fill="#ffd166" d="M23 2h4v4h-4z"/><path fill="#fff" d="M10 17h3v3h-3z"/></symbol>
+    <symbol id="icon-bull" viewBox="0 0 32 32"><path fill="#b56576" d="M7 10h18v16H7z"/><path fill="#ffe5d9" d="M5 7h6v5H5zm16 0h6v5h-6z"/><path fill="#fff" d="M10 15h3v3h-3zm9 0h3v3h-3z"/><path fill="#6d2e46" d="M13 22h6v3h-6z"/></symbol>
+    <symbol id="icon-calendar" viewBox="0 0 32 32"><path fill="#5e9cff" d="M4 7h24v21H4z"/><path fill="#dbeafe" d="M4 11h24v17H4z"/><path fill="#1d4ed8" d="M9 3h4v7H9zm10 0h4v7h-4z"/><path fill="#f97316" d="M8 15h4v4H8zm6 0h4v4h-4zm6 0h4v4h-4z"/></symbol>
+    <symbol id="icon-purchase" viewBox="0 0 32 32"><path fill="#52b788" d="M5 9h22l-2 18H7z"/><path fill="#d8f3dc" d="M10 9a6 6 0 0 1 12 0h-3a3 3 0 0 0-6 0z"/><path fill="#fff" d="M10 16h12v3H10zm2 6h8v3h-8z"/></symbol>
+    <symbol id="icon-station-map" viewBox="0 0 32 32"><path fill="#9b8cff" d="M3 5h8v22H3zm9 0h8v22h-8zm9 0h8v22h-8z"/><path fill="#fff" d="M5 8h4v4H5zm9 6h4v4h-4zm9 8h4v4h-4z"/><path fill="#ffca3a" d="M5 20h4v4H5zm9-12h4v4h-4zm9 6h4v4h-4z"/></symbol>
+  </defs>
+</svg>
