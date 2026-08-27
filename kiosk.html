@@ -60,6 +60,7 @@ a{color:var(--blue)}
 .split{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .column{background:var(--paper);border:1px solid var(--line);border-radius:16px;box-shadow:0 6px 18px #1d1d1f0a;padding:12px 12px}
 .column h2{display:flex;align-items:center;gap:7px;font-size:15.5px;margin:0 0 2px}
+.column .col-count{display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:22px;padding:0 7px;border-radius:8px;background:var(--paper);border:1px solid var(--line);color:var(--muted);font-size:12.5px;font-weight:900;box-shadow:inset 0 0 0 1px rgba(0,0,0,.02)}
 .column .note{color:var(--muted);font-size:11.5px;margin:0 0 9px}
 .cards{display:flex;flex-direction:column;gap:7px}
 .empty{border:1px dashed var(--line);border-radius:12px;padding:12px;color:var(--muted);font-size:12.5px;text-align:center}
@@ -70,7 +71,10 @@ a{color:var(--blue)}
 .all-group .subhead{color:var(--muted);font-size:12px;margin:0 0 8px}
 
 /* Work item card: whole-rectangle color for urgent / attention states */
-.work{background:var(--paper);border:1px solid var(--line);border-left:5px solid var(--blue);border-radius:14px;overflow:hidden}
+.work{position:relative;background:var(--paper);border:1px solid var(--line);border-left:5px solid var(--blue);border-radius:14px;overflow:hidden}
+.work .order-num{display:inline-flex;align-items:center;justify-content:center;min-width:21px;height:21px;padding:0 6px;margin-right:6px;border-radius:8px;font-size:12px;font-weight:900;color:#fff;box-shadow:0 1px 3px rgba(0,0,0,.22);vertical-align:middle}
+.order-num.o-queue{background:var(--blue)}
+.order-num.o-present{background:var(--green,#1f9d55)}
 .work.ready{border-left-color:var(--green);background:#f6fbf8}
 .work.attention-card{background:#fff3b8;border-color:#e8cf6e;border-left-color:#c98a00}
 .work.urgent-card{background:#ffd3d7;border-color:#e0949c;border-left-color:var(--red)}
@@ -183,12 +187,12 @@ a{color:var(--blue)}
 
   <section class="split" id="splitView">
     <section class="column">
-      <h2><svg class="pixel-icon sm"><use href="assets/pixel-icons.svg#icon-alert"/></svg>En cola</h2>
+      <h2><svg class="pixel-icon sm"><use href="assets/pixel-icons.svg#icon-alert"/></svg>En cola <span class="col-count" id="queueCount"></span></h2>
       <p class="note" id="queueNote"></p>
       <div class="cards" id="queueList"></div>
     </section>
     <section class="column">
-      <h2><svg class="pixel-icon sm"><use href="assets/pixel-icons.svg#icon-station-map"/></svg>En estación</h2>
+      <h2><svg class="pixel-icon sm"><use href="assets/pixel-icons.svg#icon-station-map"/></svg>En estación <span class="col-count" id="presentCount"></span></h2>
       <p class="note" id="presentNote"></p>
       <div class="cards" id="presentList"></div>
     </section>
@@ -410,11 +414,12 @@ function passToStation(id,stationId){
   render();
 }
 
-function workCard(o,context,stationId){
+function workCard(o,context,stationId,orderNum){
   const state=uiState[o.id];
   const open=openId===o.id;
   const isBlocked=state.blocked;
   const cls=o.urgent?'urgent-card':(isBlocked||o.attention)?'attention-card':o.ready?'ready':'';
+  const orderBadge=orderNum?`<span class="order-num ${context==='queue'?'o-queue':'o-present'}">${orderNum}</span>`:'';
   const patientName=syntheticPatient(o.id);
   const numericCode=`843${o.id.replace(/\D/g,'').padStart(9,'0')}`;
   const trayNumber=stationIndex(o.current)>=0?String(stationIndex(o.current)+1).padStart(2,'0'):'00';
@@ -444,7 +449,7 @@ function workCard(o,context,stationId){
         ${queueEstimate}
       </div>
       <div class="titles">
-        <span class="k"><span class="synth-flag">SINTÉTICO</span> · Batea ${trayNumber} · Código ${numericCode}</span>
+        <span class="k">${orderBadge}<span class="synth-flag">SINTÉTICO</span> · Batea ${trayNumber} · Código ${numericCode}</span>
         <span class="name-row"><span class="patient-line"><span class="v">${patientName}</span><span class="clinic-short">${o.clinic}</span></span><span class="dispatch-area"><span class="dispatch-chip">${icon('icon-dispatch','sm')}${o.dispatch}</span>${sideAlert}</span></span>
         <span class="m">${o.type} · ${o.material} · ${o.teeth}</span>
         ${o.note?`<span class="note-line">${o.note}</span>`:''}
@@ -548,8 +553,10 @@ function renderStationSplit(){
   const st=stationMeta(activeStation), w=stationWorkload(activeStation);
   $('#queueNote').textContent=`Esperando entrar en ${st.label}.`;
   $('#presentNote').textContent=`Presentes ahora en ${st.label}.`;
-  $('#queueList').innerHTML=w.queue.length?w.queue.map(o=>workCard(o,'queue',activeStation)).join(''):'<div class="empty">Sin trabajos en cola hacia este puesto.</div>';
-  $('#presentList').innerHTML=w.present.length?w.present.map(o=>workCard(o,'present',activeStation)).join(''):'<div class="empty">Ningún trabajo está ahora en este puesto.</div>';
+  $('#queueCount').textContent=`(${w.queue.length})`;
+  $('#presentCount').textContent=`(${w.present.length})`;
+  $('#queueList').innerHTML=w.queue.length?w.queue.map((o,i)=>workCard(o,'queue',activeStation,i+1)).join(''):'<div class="empty">Sin trabajos en cola hacia este puesto.</div>';
+  $('#presentList').innerHTML=w.present.length?w.present.map((o,i)=>workCard(o,'present',activeStation,i+1)).join(''):'<div class="empty">Ningún trabajo está ahora en este puesto.</div>';
   bindCardEvents($('#splitView'));
 }
 
@@ -562,7 +569,7 @@ function renderAllView(){
   $('#allView').innerHTML=`<section class="all-group">
     <h3>${icon('icon-station-map')} TODOS LOS TRABAJOS · ${ordered.length}</h3>
     <p class="subhead">Lista única de todos los trabajos sintéticos que están en el flujo, incluidos cola y estación.</p>
-    <div class="cards">${ordered.map(work=>{const destination=work.queuedFor||(work.current==='entrada'?work.next:work.current); const context=(work.queuedFor||work.current==='entrada')?'queue':'present'; return workCard(work,context,destination);}).join('')}</div>
+    <div class="cards">${ordered.map((work,idx)=>{const destination=work.queuedFor||(work.current==='entrada'?work.next:work.current); const context=(work.queuedFor||work.current==='entrada')?'queue':'present'; return workCard(work,context,destination,idx+1);}).join('')}</div>
   </section>`;
   bindCardEvents($('#allView'));
 }
